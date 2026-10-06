@@ -175,6 +175,9 @@ val compilePaper26_1 = tasks.register<JavaCompile>("compilePaper26_1") {
     source = sourceSets.main.get().allJava
     classpath = paper26_1CompileClasspath
     destinationDirectory = layout.buildDirectory.dir("classes/java/paper26_1")
+    javaCompiler.set(javaToolchains.compilerFor {
+        languageVersion = JavaLanguageVersion.of(25)
+    })
     options.release = 25
     options.encoding = "UTF-8"
     options.compilerArgs.addAll(listOf("-parameters", "-Xlint:deprecation", "-Xlint:unchecked"))
@@ -186,6 +189,9 @@ val compilePaper26_2 = tasks.register<JavaCompile>("compilePaper26_2") {
     source = sourceSets.main.get().allJava
     classpath = paper26_2CompileClasspath
     destinationDirectory = layout.buildDirectory.dir("classes/java/paper26_2")
+    javaCompiler.set(javaToolchains.compilerFor {
+        languageVersion = JavaLanguageVersion.of(25)
+    })
     options.release = 25
     options.encoding = "UTF-8"
     options.compilerArgs.addAll(listOf("-parameters", "-Xlint:deprecation", "-Xlint:unchecked"))
@@ -300,6 +306,8 @@ tasks.check {
 }
 
 tasks.named<ShadowJar>("shadowJar") {
+    // Keep runtime resources (notably config.yml) in the production jar used by smoke jobs.
+    from(sourceSets.main.get().output)
     archiveClassifier = ""
     mergeServiceFiles()
 
@@ -314,6 +322,12 @@ tasks.named<ShadowJar>("shadowJar") {
 
     doLast {
         ZipFile(archiveFile.get().asFile).use { jar ->
+            check(jar.getEntry("config.yml") != null) {
+                "The production jar must contain config.yml for compatibility smoke tests"
+            }
+            check(jar.getEntry("plugin.yml") != null) {
+                "The production jar must contain plugin.yml"
+            }
             val bundledCraftEngine = jar.entries().asSequence()
                 .map { it.name }
                 .filter { it.startsWith("net/momirealms/craftengine/") }
