@@ -76,7 +76,7 @@ public class InteractionVisualizer extends JavaPlugin {
 
     public static final int BSTATS_PLUGIN_ID = 7024;
     public static final String CONFIG_ID = "config";
-    public static final Set<String> SUPPORTED_MINECRAFT_VERSIONS = Set.of("26.1.2", "26.2");
+    public static final Set<String> SUPPORTED_MINECRAFT_VERSIONS = Set.of("26.1.2", "26.2", "26.3");
     private static final String PERFORMANCE_MIGRATION_MARKER =
             ".paper26-performance-defaults-advised";
 
@@ -158,7 +158,7 @@ public class InteractionVisualizer extends JavaPlugin {
 
         String minecraftVersion = getServer().getMinecraftVersion();
         if (!SUPPORTED_MINECRAFT_VERSIONS.contains(minecraftVersion)) {
-            getComponentLogger().error("InteractionVisualizer supports Paper 26.1.2 and 26.2 only; found {}", minecraftVersion);
+            getComponentLogger().error("InteractionVisualizer supports Paper 26.1.2, 26.2, and 26.3 only; found {}", minecraftVersion);
             getServer().getPluginManager().disablePlugin(this);
             return;
         }

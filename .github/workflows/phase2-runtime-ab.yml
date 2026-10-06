@@ -252,7 +252,7 @@ jobs:
             (( MEASURE_SECONDS >= 45 ))
           fi
 
-          PLUGIN_JAR=$(find build/libs -maxdepth 1 -type f -name 'InteractionVisualizer-*.jar' ! -name '*-sources.jar' ! -name '*-benchmark.jar' -print -quit)
+          PLUGIN_JAR=$(find build/libs -maxdepth 1 -type f -name 'InteractionVisualizer-*.jar' ! -name '*-sources.jar' ! -name '*-benchmark.jar' ! -name '*-runtime-compare.jar' -print -quit)
           test -n "$PLUGIN_JAR"
           if [[ "$SPARK_PROFILE_MODE" == none ]]; then
             [[ "$EVIDENCE_KIND" == clean ]]

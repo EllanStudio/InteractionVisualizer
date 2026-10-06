@@ -12,9 +12,16 @@ version = "2026.1.2.0"
 val pluginVersion = version.toString()
 val paper26_1Version = "26.1.2.build.74-stable"
 val paper26_2Version = "26.2.build.56-alpha"
+val paper26_3Version = "26.3.build.157-beta"
 val craftEngineVersion = "26.7.2"
 val sparrowHeartVersion = "0.72"
 val caffeineVersion = "3.2.3"
+
+val paper26_1CompileClasspath = configurations.create("paper26_1CompileClasspath") {
+    isCanBeConsumed = false
+    isCanBeResolved = true
+    extendsFrom(configurations.implementation.get())
+}
 
 val paper26_2CompileClasspath = configurations.create("paper26_2CompileClasspath") {
     isCanBeConsumed = false
@@ -30,7 +37,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:$paper26_1Version")
+    compileOnly("io.papermc.paper:paper-api:$paper26_3Version")
     compileOnly("me.clip:placeholderapi:2.11.7")
     compileOnly("net.momirealms:craft-engine-core:$craftEngineVersion")
     compileOnly("net.momirealms:craft-engine-bukkit:$craftEngineVersion")
@@ -41,8 +48,13 @@ dependencies {
 
     testImplementation(platform("org.junit:junit-bom:5.13.4"))
     testImplementation("org.junit.jupiter:junit-jupiter")
-    testImplementation("io.papermc.paper:paper-api:$paper26_1Version")
+    testImplementation("io.papermc.paper:paper-api:$paper26_3Version")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    paper26_1CompileClasspath("io.papermc.paper:paper-api:$paper26_1Version")
+    paper26_1CompileClasspath("me.clip:placeholderapi:2.11.7")
+    paper26_1CompileClasspath("net.momirealms:craft-engine-core:$craftEngineVersion")
+    paper26_1CompileClasspath("net.momirealms:craft-engine-bukkit:$craftEngineVersion")
 
     paper26_2CompileClasspath("io.papermc.paper:paper-api:$paper26_2Version")
     paper26_2CompileClasspath("me.clip:placeholderapi:2.11.7")
@@ -157,12 +169,29 @@ val testLegacyTextComponentCacheDisabled = tasks.register<Test>("testLegacyTextC
     dependsOn(tasks.testClasses)
 }
 
+val compilePaper26_1 = tasks.register<JavaCompile>("compilePaper26_1") {
+    description = "Compiles the same Paper-API-only sources against Paper 26.1.2."
+    group = LifecycleBasePlugin.VERIFICATION_GROUP
+    source = sourceSets.main.get().allJava
+    classpath = paper26_1CompileClasspath
+    destinationDirectory = layout.buildDirectory.dir("classes/java/paper26_1")
+    javaCompiler.set(javaToolchains.compilerFor {
+        languageVersion = JavaLanguageVersion.of(25)
+    })
+    options.release = 25
+    options.encoding = "UTF-8"
+    options.compilerArgs.addAll(listOf("-parameters", "-Xlint:deprecation", "-Xlint:unchecked"))
+}
+
 val compilePaper26_2 = tasks.register<JavaCompile>("compilePaper26_2") {
     description = "Compiles the same Paper-API-only sources against Paper 26.2."
     group = LifecycleBasePlugin.VERIFICATION_GROUP
     source = sourceSets.main.get().allJava
     classpath = paper26_2CompileClasspath
     destinationDirectory = layout.buildDirectory.dir("classes/java/paper26_2")
+    javaCompiler.set(javaToolchains.compilerFor {
+        languageVersion = JavaLanguageVersion.of(25)
+    })
     options.release = 25
     options.encoding = "UTF-8"
     options.compilerArgs.addAll(listOf("-parameters", "-Xlint:deprecation", "-Xlint:unchecked"))
@@ -268,6 +297,7 @@ val verifyCustomContentIsolation = tasks.register("verifyCustomContentIsolation"
 }
 
 tasks.check {
+    dependsOn(compilePaper26_1)
     dependsOn(compilePaper26_2)
     dependsOn(verifyPaperOnlyArchitecture)
     dependsOn(verifyCustomContentIsolation)
@@ -276,6 +306,8 @@ tasks.check {
 }
 
 tasks.named<ShadowJar>("shadowJar") {
+    // Keep runtime resources (notably config.yml) in the production jar used by smoke jobs.
+    from(sourceSets.main.get().output)
     archiveClassifier = ""
     mergeServiceFiles()
 
@@ -290,6 +322,12 @@ tasks.named<ShadowJar>("shadowJar") {
 
     doLast {
         ZipFile(archiveFile.get().asFile).use { jar ->
+            check(jar.getEntry("config.yml") != null) {
+                "The production jar must contain config.yml for compatibility smoke tests"
+            }
+            check(jar.getEntry("plugin.yml") != null) {
+                "The production jar must contain plugin.yml"
+            }
             val bundledCraftEngine = jar.entries().asSequence()
                 .map { it.name }
                 .filter { it.startsWith("net/momirealms/craftengine/") }

@@ -7,8 +7,8 @@ preserving the familiar commands, preferences, and configuration layout.
 
 ## Supported server versions
 
-- Paper **26.1.2** (primary target)
-- Paper **26.2** (compile-verified compatibility target)
+- Paper **26.3** (primary target, API `26.3.build.157-beta`)
+- Paper **26.1.2** and **26.2** (compile-verified compatibility targets)
 - Java **25**
 
 Other Minecraft versions, Spigot, and Folia are intentionally unsupported. The
@@ -24,7 +24,7 @@ outside the supported range.
   without enabling server item collision physics.
 - One Paper API implementation replaces the old in-project per-version NMS modules.
   InteractionVisualizer uses Heart 0.72 only for the client-side item packet path
-  on the supported 26.1/26.2 runtimes.
+  on the supported 26.1/26.2/26.3 runtimes.
 - Per-viewer anchor visibility uses Paper's `showEntity` / `hideEntity` API;
   tracker enter/leave events create and destroy the matching virtual `ITEM`.
 - Static items bob and spin entirely client-side with no animation task; only
@@ -41,7 +41,7 @@ outside the supported range.
   [Sparrow YAML](https://github.com/Xiao-MoMi/sparrow-yaml) and flattened into an
   immutable O(1)-lookup snapshot after every reload.
 - Gradle replaces the former Maven multi-module build and verifies the same
-  sources against both supported Paper API lines.
+  sources against all three supported Paper API lines.
 
 Other Sparrow modules were deliberately not added: metadata, reflection, NBT,
 and Redis messaging do not serve this single-server rendering path.
@@ -59,8 +59,8 @@ gradlew.bat clean check shadowJar
 ```
 
 The production plugin JAR is written to `build/libs/InteractionVisualizer-<version>.jar`.
-`check` includes unit tests, the Paper 26.1.2 compilation, and a second compile
-against Paper 26.2.
+`check` includes unit tests, the primary Paper 26.3 compilation, and compatibility
+compiles against Paper 26.1.2 and Paper 26.2.
 
 ## Performance rollout and diagnostics
 

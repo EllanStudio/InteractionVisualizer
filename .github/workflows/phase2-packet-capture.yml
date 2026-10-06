@@ -171,7 +171,7 @@ jobs:
             (( MEASURE_SECONDS >= 10 ))
           fi
 
-          PLUGIN_JAR=$(find build/libs -maxdepth 1 -type f -name 'InteractionVisualizer-*.jar' ! -name '*-sources.jar' ! -name '*-benchmark.jar' -print -quit)
+          PLUGIN_JAR=$(find build/libs -maxdepth 1 -type f -name 'InteractionVisualizer-*.jar' ! -name '*-sources.jar' ! -name '*-benchmark.jar' ! -name '*-runtime-compare.jar' -print -quit)
           test -n "$PLUGIN_JAR"
           mkdir -p phase2-results/packet
           MANIFEST=phase2-results/packet/abba-manifest.csv
